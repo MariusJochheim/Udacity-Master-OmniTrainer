@@ -38,6 +38,12 @@ class TestModerationResult:
         assert hasattr(result, "model_dump"), "ModerationResult should have model_dump method (Pydantic BaseModel)"
         assert hasattr(result, "model_validate"), "ModerationResult should have model_validate method (Pydantic BaseModel)"
 
+    def test_is_flagged_computed_field_defaults_to_false(self):
+        """Verify is_flagged computed field exists and defaults to False for base class"""
+        result = ModerationResult(rationale="Test rationale")
+        assert hasattr(result, "is_flagged"), "ModerationResult should expose 'is_flagged'"
+        assert result.is_flagged is False, "Base ModerationResult with no flag fields should not be flagged"
+
 
 class TestTextModerationResult:
     """Test the TextModerationResult class"""
@@ -79,6 +85,25 @@ class TestTextModerationResult:
         """Verify all fields are required"""
         with pytest.raises(ValidationError, match="contains_pii|is_unfriendly|is_unprofessional"):
             TextModerationResult(rationale="Test")
+
+    def test_is_flagged_computed_field(self):
+        """Verify is_flagged is derived from any unsafe flags"""
+        result = TextModerationResult(
+            rationale="Test rationale",
+            contains_pii=False,
+            is_unfriendly=True,
+            is_unprofessional=False,
+        )
+
+        assert result.is_flagged is True, "is_flagged should be True when any flag is True"
+
+        result = TextModerationResult(
+            rationale="Test rationale",
+            contains_pii=False,
+            is_unfriendly=False,
+            is_unprofessional=False,
+        )
+        assert result.is_flagged is False, "is_flagged should be False when no flags are True"
 
 
 class TestImageModerationResult:
@@ -122,6 +147,25 @@ class TestImageModerationResult:
         with pytest.raises(ValidationError, match="contains_pii|is_disturbing|is_low_quality"):
             ImageModerationResult(rationale="Test")
 
+    def test_is_flagged_computed_field(self):
+        """Verify is_flagged is derived from any unsafe flags"""
+        result = ImageModerationResult(
+            rationale="Test rationale",
+            contains_pii=True,
+            is_disturbing=False,
+            is_low_quality=False,
+        )
+
+        assert result.is_flagged is True, "is_flagged should be True when any flag is True"
+
+        result = ImageModerationResult(
+            rationale="Test rationale",
+            contains_pii=False,
+            is_disturbing=False,
+            is_low_quality=False,
+        )
+        assert result.is_flagged is False, "is_flagged should be False when no flags are True"
+
 
 class TestVideoModerationResult:
     """Test the VideoModerationResult class"""
@@ -163,6 +207,25 @@ class TestVideoModerationResult:
         """Verify all fields are required"""
         with pytest.raises(ValidationError, match="contains_pii|is_disturbing|is_low_quality"):
             VideoModerationResult(rationale="Test")
+
+    def test_is_flagged_computed_field(self):
+        """Verify is_flagged is derived from any unsafe flags"""
+        result = VideoModerationResult(
+            rationale="Test rationale",
+            contains_pii=False,
+            is_disturbing=True,
+            is_low_quality=False,
+        )
+
+        assert result.is_flagged is True, "is_flagged should be True when any flag is True"
+
+        result = VideoModerationResult(
+            rationale="Test rationale",
+            contains_pii=False,
+            is_disturbing=False,
+            is_low_quality=False,
+        )
+        assert result.is_flagged is False, "is_flagged should be False when no flags are True"
 
 
 class TestAudioModerationResult:
@@ -209,3 +272,24 @@ class TestAudioModerationResult:
         """Verify all fields are required"""
         with pytest.raises(ValidationError, match="transcription|contains_pii|is_unfriendly|is_unprofessional"):
             AudioModerationResult(rationale="Test", transcription="Test")
+
+    def test_is_flagged_computed_field(self):
+        """Verify is_flagged is derived from any unsafe flags"""
+        result = AudioModerationResult(
+            rationale="Test rationale",
+            transcription="Test transcription",
+            contains_pii=False,
+            is_unfriendly=False,
+            is_unprofessional=True,
+        )
+
+        assert result.is_flagged is True, "is_flagged should be True when any flag is True"
+
+        result = AudioModerationResult(
+            rationale="Test rationale",
+            transcription="Test transcription",
+            contains_pii=False,
+            is_unfriendly=False,
+            is_unprofessional=False,
+        )
+        assert result.is_flagged is False, "is_flagged should be False when no flags are True"
