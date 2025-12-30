@@ -1,1 +1,2 @@
 multimodal_moderation
+uploaded_media
